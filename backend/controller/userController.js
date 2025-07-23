@@ -67,6 +67,9 @@ exports.loginUser = async (req, res) => {
 };
 
 
-
-
+// Get all users (Admin)
+exports.getAllUsers = async (req, res) => {
+  const users = await User.find();
+  res.json(users);
+};
 
