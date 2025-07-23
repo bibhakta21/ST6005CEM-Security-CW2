@@ -73,3 +73,15 @@ exports.getAllUsers = async (req, res) => {
   res.json(users);
 };
 
+// Get user by ID (Admin)
+exports.getUserById = async (req, res) => {
+  const user = await User.findById(req.params.id);
+  if (!user) return res.status(404).json({ error: "User not found" });
+  res.json(user);
+};
+
+// Delete user (Admin)
+exports.deleteUser = async (req, res) => {
+  await User.findByIdAndDelete(req.params.id);
+  res.json({ message: "User deleted" });
+};
