@@ -224,3 +224,32 @@ exports.forgotPassword = async (req, res) => {
   }
 };
 
+
+exports.resetPassword = async (req, res) => {
+  try {
+    const { token, newPassword } = req.body;
+
+    const hashedToken = crypto.createHash("sha256").update(token).digest("hex");
+    const user = await User.findOne({
+      resetPasswordToken: hashedToken,
+      resetPasswordExpire: { $gt: Date.now() }, // Ensure token is not expired
+    });
+
+    if (!user) return res.status(400).json({ error: "Invalid or expired token" });
+
+    // Update password and set passwordChangedAt
+    user.password = newPassword; // Will be hashed due to pre-save hook
+    user.passwordChangedAt = Date.now();
+    user.resetPasswordToken = undefined;
+    user.resetPasswordExpire = undefined;
+
+    await user.save();
+
+    res.json({ message: "Password reset successfully! Please log in again." });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+};
+
+
+
