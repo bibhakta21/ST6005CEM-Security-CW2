@@ -24,8 +24,21 @@ const Navbar = () => {
      
       </div>
 
-
-     
+      <div className="md:hidden px-4 pb-4 space-y-4 text-base text-gray-700 font-medium">
+        <ul className="space-y-3">
+          <li className="hover:text-blue-600">Home</li>
+          <li className="hover:text-blue-600">Dashboard</li>
+          <li className="hover:text-blue-600">Products</li>
+          <li className="hover:text-blue-600">About</li>
+          <li className="hover:text-blue-600">Contact</li>
+        </ul>
+        <div className="flex space-x-6 mt-3 text-xl">
+          <FiSearch className="cursor-pointer" />
+          <FiShoppingBag className="cursor-pointer" />
+          <FiHeart className="cursor-pointer" />
+          <FiUser className="cursor-pointer" />
+        </div>
+      </div>
     </nav>
   );
 };
