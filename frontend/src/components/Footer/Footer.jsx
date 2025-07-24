@@ -15,7 +15,7 @@ const Footer = () => {
         <div>
           <img
             src={logo}
-            alt="Samaya Logo"
+            alt=""
             className="w-40 h-auto object-contain"
           />
           <p className="mt-4 text-sm leading-relaxed text-[#8b8e99]">
@@ -55,7 +55,7 @@ const Footer = () => {
         <div>
           <h2 className="text-lg font-semibold mb-4">Support</h2>
           <p className="text-sm text-[#8b8e99]">Kalanki, Kathmandu</p>
-          <p className="text-sm mt-2 text-[#8b8e99]">samaya@info.com</p>
+          <p className="text-sm mt-2 text-[#8b8e99]">nepalwears@info.com</p>
           <p className="text-sm mt-2 text-[#8b8e99]">+977-9813056161</p>
           <Link to="/faq">
             <p className="text-sm mt-2 text-[#8b8e99] hover:text-orange-400 transition">
@@ -108,7 +108,10 @@ const Footer = () => {
         </div>
       </div>
 
-    
+      {/* Copyright */}
+      <div className="border-t border-gray-700 text-center py-4 text-sm text-white/80">
+        Copyright © 2025 | Samaya
+      </div>
     </div>
   );
 };
