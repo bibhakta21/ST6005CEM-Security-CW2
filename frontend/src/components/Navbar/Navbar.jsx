@@ -19,11 +19,26 @@ const Navbar = () => {
           <li className="cursor-pointer hover:text-blue-600">Contact</li>
         </ul>
 
-       
+        <div className="hidden md:flex items-center space-x-6 text-xl text-gray-700 relative">
+          <FiSearch className="cursor-pointer" />
+          <div className="relative cursor-pointer">
+            <FiShoppingBag />
+            <span className="absolute -top-2 -right-2 bg-red-500 text-white text-xs w-5 h-5 rounded-full flex items-center justify-center">
+              0
+            </span>
+          </div>
+          <FiHeart className="cursor-pointer" />
+          <FiUser className="cursor-pointer" />
+        </div>
 
-     
+        <div className="md:hidden text-3xl text-gray-700">
+          <button>
+            <FiMenu />
+          </button>
+        </div>
       </div>
 
+      {/* Mobile Menu */}
       <div className="md:hidden px-4 pb-4 space-y-4 text-base text-gray-700 font-medium">
         <ul className="space-y-3">
           <li className="hover:text-blue-600">Home</li>
