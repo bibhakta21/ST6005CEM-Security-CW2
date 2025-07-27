@@ -4,7 +4,80 @@ import { Link, useNavigate } from "react-router-dom";
 import { toast } from "react-hot-toast";
 
 export default function Register() {
-  
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+  const [formData, setFormData] = useState({
+    username: "",
+    email: "",
+    password: "",
+    confirmPassword: "",
+  });
+  const [errors, setErrors] = useState({});
+  const [submitError, setSubmitError] = useState("");
+  const navigate = useNavigate();
+
+  const validateField = (name, value) => {
+    let message = "";
+    if (name === "username" && value.length < 5) {
+      message = "Username must be at least 5 characters.";
+    }
+    if (name === "email" && !value.endsWith("@gmail.com")) {
+      message = "Email must end with @gmail.com";
+    }
+    if (name === "password" && value.length < 8) {
+      message = "Password must be at least 8 characters.";
+    }
+    if (name === "confirmPassword" && value !== formData.password) {
+      message = "Passwords do not match.";
+    }
+    setErrors((prev) => ({ ...prev, [name]: message }));
+  };
+
+  const handleChange = (e) => {
+    const { name, value } = e.target;
+    setFormData((prev) => ({ ...prev, [name]: value }));
+    validateField(name, value);
+    setSubmitError("");
+  };
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    setSubmitError("");
+
+    if (Object.values(errors).some((err) => err)) {
+      setSubmitError("Please fix validation errors.");
+      return;
+    }
+
+    if (formData.password !== formData.confirmPassword) {
+      setSubmitError("Passwords do not match.");
+      return;
+    }
+
+    try {
+      const response = await fetch("http://localhost:3000/api/users/signup", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          username: formData.username,
+          email: formData.email,
+          password: formData.password,
+        }),
+      });
+
+      const data = await response.json();
+
+      if (response.ok) {
+        toast.success("Registration successful! Redirecting to login...");
+        setFormData({ username: "", email: "", password: "", confirmPassword: "" });
+        setTimeout(() => navigate("/login"), 2000);
+      } else {
+        setSubmitError(data.error || "Registration failed. Please try again.");
+      }
+    } catch (err) {
+      setSubmitError("Something went wrong. Please try again.");
+    }
+  };
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gray-50 font-[Poppins] px-4">
