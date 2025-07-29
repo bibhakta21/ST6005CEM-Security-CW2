@@ -5,46 +5,46 @@ import {
   FaYoutube,
 } from "react-icons/fa";
 import { Link } from "react-router-dom";
-import logo from "../../assets/logo1.png"; // Adjust this path as needed
 
 const Footer = () => {
   return (
-    <div className="bg-black text-white">
+    <div className="bg-white text-gray-900 shadow-[0_-6px_20px_rgba(0,0,0,0.1)]">
       <div className="max-w-7xl mx-auto px-4 py-12 grid md:grid-cols-4 gap-y-12 gap-x-16">
+        
         {/* Brand & Testimonial */}
         <div>
-          <img
-            src={logo}
-            alt=""
-            className="w-40 h-auto object-contain"
-          />
-          <p className="mt-4 text-sm leading-relaxed text-[#8b8e99]">
-         Don’t waste time, just order! This is the best website to purchase
-            clothes. Best e-commerce site in Nepal. 
+          <Link to="/">
+            <div className="text-4xl font-extrabold text-gray-900">
+              NepalWears<span className="text-orange-500">.</span>
+            </div>
+          </Link>
+          <p className="mt-4 text-sm leading-relaxed text-gray-500">
+            Don’t waste time, just order! This is the best website to purchase
+            clothes. Best e-commerce site in Nepal.
           </p>
 
           <div className="flex gap-4 mt-6">
             <a
               href="#"
-              className="bg-[#1d4ed8] w-8 h-8 flex items-center justify-center rounded-full"
+              className="bg-blue-600 w-8 h-8 flex items-center justify-center rounded-full hover:bg-blue-700 transition"
             >
               <FaFacebookF className="text-white text-base" />
             </a>
             <a
               href="#"
-              className="bg-[#1d4ed8] w-8 h-8 flex items-center justify-center rounded-full"
+              className="bg-blue-600 w-8 h-8 flex items-center justify-center rounded-full hover:bg-blue-700 transition"
             >
               <FaTwitter className="text-white text-base" />
             </a>
             <a
               href="#"
-              className="bg-[#1d4ed8] w-8 h-8 flex items-center justify-center rounded-full"
+              className="bg-pink-500 w-8 h-8 flex items-center justify-center rounded-full hover:bg-pink-600 transition"
             >
               <FaInstagram className="text-white text-base" />
             </a>
             <a
               href="#"
-              className="bg-[#1d4ed8] w-8 h-8 flex items-center justify-center rounded-full"
+              className="bg-red-600 w-8 h-8 flex items-center justify-center rounded-full hover:bg-red-700 transition"
             >
               <FaYoutube className="text-white text-base" />
             </a>
@@ -54,11 +54,11 @@ const Footer = () => {
         {/* Support */}
         <div>
           <h2 className="text-lg font-semibold mb-4">Support</h2>
-          <p className="text-sm text-[#8b8e99]">Kalanki, Kathmandu</p>
-          <p className="text-sm mt-2 text-[#8b8e99]">nepalwears@info.com</p>
-          <p className="text-sm mt-2 text-[#8b8e99]">+977-9813056161</p>
+          <p className="text-sm text-gray-600">Kalanki, Kathmandu</p>
+          <p className="text-sm mt-2 text-gray-600">nepalwears@info.com</p>
+          <p className="text-sm mt-2 text-gray-600">+977-9813056161</p>
           <Link to="/faq">
-            <p className="text-sm mt-2 text-[#8b8e99] hover:text-orange-400 transition">
+            <p className="text-sm mt-2 text-gray-600 hover:text-orange-500 transition">
               Frequently Asked Questions
             </p>
           </Link>
@@ -67,24 +67,24 @@ const Footer = () => {
         {/* Quick Links */}
         <div>
           <h2 className="text-lg font-semibold mb-4">Quick Links</h2>
-          <ul className="space-y-2 text-sm text-[#8b8e99]">
+          <ul className="space-y-2 text-sm text-gray-600">
             <li>
-              <Link to="/" className="hover:text-orange-400">
+              <Link to="/" className="hover:text-orange-500 transition">
                 Home
               </Link>
             </li>
             <li>
-              <Link to="/products" className="hover:text-orange-400">
+              <Link to="/products" className="hover:text-orange-500 transition">
                 Products
               </Link>
             </li>
             <li>
-              <Link to="/about" className="hover:text-orange-400">
+              <Link to="/about" className="hover:text-orange-500 transition">
                 About
               </Link>
             </li>
             <li>
-              <Link to="/contact" className="hover:text-orange-400">
+              <Link to="/contact" className="hover:text-orange-500 transition">
                 Contacts
               </Link>
             </li>
@@ -109,8 +109,8 @@ const Footer = () => {
       </div>
 
       {/* Copyright */}
-      <div className="border-t border-gray-700 text-center py-4 text-sm text-white/80">
-        Copyright © 2025 | Samaya
+      <div className="border-t border-gray-200 text-center py-4 text-sm text-gray-500">
+        Copyright © 2025 | NepalWears
       </div>
     </div>
   );
