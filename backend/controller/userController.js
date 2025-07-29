@@ -1,69 +1,164 @@
 const User = require("../model/User");
 const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
-const nodemailer = require("nodemailer");
 const crypto = require("crypto");
+const nodemailer = require("nodemailer");
+const speakeasy = require("speakeasy");
+const QRCode = require("qrcode");
+const verifyCaptcha = require("../middleware/verifyCaptcha");
+const multer = require("multer");
+const path = require("path");
 
-// Register user
+function signToken(userId) {
+  return jwt.sign({ id: userId }, process.env.JWT_SECRET, { expiresIn: "7d" });
+}
+
+async function sendEmail(to, subject, text) {
+  const transporter = nodemailer.createTransport({
+    service: "Gmail", auth: { user: process.env.EMAIL_USER, pass: process.env.EMAIL_PASS }
+  });
+  await transporter.sendMail({ from: process.env.EMAIL_USER, to, subject, text });
+}
+
 exports.registerUser = async (req, res) => {
-  try {
-    const { username, email,  password, role } = req.body;
+  const { username, email, password, captchaToken } = req.body;
 
-    // Check for duplicate username, email, and phone
-    const existingUsername = await User.findOne({ username });
-    if (existingUsername) {
-      return res.status(400).json({ error: "Username already exists. Please try another." });
-    }
+  if (!await verifyCaptcha(captchaToken))
+    return res.status(400).json({ error: "CAPTCHA failed" });
 
-    const existingEmail = await User.findOne({ email });
-    if (existingEmail) {
-      return res.status(400).json({ error: "Email is already in use. Please use a different email." });
-    }
+  if (await User.findOne({ email }))
+    return res.status(400).json({ error: "Email in use" });
 
-   
+  // ✅ Generate MFA secret before using it
+  const secret = speakeasy.generateSecret({ name: `NepalWears (${email})` });
 
-    // Check if an avatar file was uploaded
-    const avatar = req.file ? `/uploads/${req.file.filename}` : "";
+  const verifyToken = crypto.randomBytes(20).toString("hex");
 
-    // Create and save new user, including avatar if provided
-    const user = new User({ username, email, password, role, avatar });
-    await user.save();
+  const newUser = await new User({
+    username,
+    email,
+    password,
+    mfaEnabled: true, // or req.body.mfaEnabled if dynamic
+    mfaSecret: secret.base32,
+    emailVerifyToken: crypto.createHash("sha256").update(verifyToken).digest("hex")
+  }).save();
 
-    res.status(201).json({ success: "User registered successfully!" });
-  } catch (error) {
-    res.status(500).json({ error: error.message });
-  }
+  const verifyURL = `${req.protocol}://${req.get("host")}/api/users/verify-email/${verifyToken}`;
+  await sendEmail(email, "Verify your account", `Click to verify: ${verifyURL}`);
+
+  res.status(201).json({ message: "Registered. Check email to verify." });
 };
 
 
-// Login user
+exports.verifyEmail = async (req, res) => {
+  const hash = crypto.createHash("sha256").update(req.params.token).digest("hex");
+  const user = await User.findOne({ emailVerifyToken: hash });
+  if (!user) return res.status(400).json({ error: "Invalid or expired token" });
+  user.emailVerified = true;
+  user.emailVerifyToken = undefined;
+  await user.save();
+  res.redirect("http://localhost:5173/register-success");
+
+};
+
 exports.loginUser = async (req, res) => {
-  try {
-    const { email, password } = req.body;
+  const { email, password, captchaToken } = req.body;
+  if (!await verifyCaptcha(captchaToken))
+    return res.status(400).json({ error: "CAPTCHA failed" });
 
-    // Check if the email exists in the database
-    const user = await User.findOne({ email });
-    if (!user) {
-      return res.status(404).json({ error: "Email does not exist" });
-    }
+  const user = await User.findOne({ email });
+  if (!user) return res.status(401).json({ error: "Invalid credentials" });
+  if (user.isLocked) return res.status(403).json({ error: "Account locked" });
 
-    // Compare the provided password with the hashed password in the database
-    const isMatch = await bcrypt.compare(password, user.password);
-    if (!isMatch) {
-      return res.status(400).json({ error: "Incorrect password" });
-    }
+  const matched = await bcrypt.compare(password, user.password);
+  if (!matched) {
+    await user.incLoginAttempts();
+    return res.status(401).json({ error: "Invalid credentials" });
+  }
 
-    // Generate JWT Token
-    const token = jwt.sign(
-      { id: user._id, role: user.role },
-      process.env.JWT_SECRET,
-      { expiresIn: "1d" }
+  user.loginAttempts = 0; user.lockUntil = undefined;
+  await user.save();
+
+  if (!user.emailVerified) return res.status(403).json({ error: "Email not verified" });
+
+  if (user.passwordExpiresAt && user.passwordExpiresAt < Date.now()) {
+    return res.status(403).json({ error: "Your password has expired. Please reset it." });
+  }
+
+  if (user.mfaEnabled) {
+    const otp = speakeasy.totp({
+      secret: user.mfaSecret,
+      encoding: "base32",
+    });
+
+    // Send OTP via email
+    await sendEmail(
+      user.email,
+      "Your OTP Code for Login",
+      `Your one-time password (OTP) is: ${otp}. It will expire in 5 minutes.`
     );
 
-    res.json({ token, success: "Login successful!" });
-  } catch (error) {
-    res.status(500).json({ error: error.message });
+
+    return res.json({ mfaRequired: true, userId: user._id });
   }
+
+
+  const token = signToken(user._id);
+  res.json({ token });
+};
+
+exports.setupMfa = async (req, res) => {
+  const user = await User.findById(req.user.id);
+  const secret = speakeasy.generateSecret({ name: "NepalWears(" + user.email + ")" });
+  user.mfaSecret = secret.base32;
+  await user.save();
+
+  const qrDataUrl = await QRCode.toDataURL(secret.otpauth_url);
+  res.json({ qr: qrDataUrl });
+};
+
+
+exports.verifyMfa = async (req, res) => {
+  const { userId, token } = req.body;
+
+  try {
+    const user = await User.findById(userId);
+    if (!user || !user.mfaSecret) {
+      console.log("[ERROR] MFA not setup for user:", user?.email);
+      return res.status(400).json({ error: "MFA not setup" });
+    }
+
+    console.log("[DEBUG] Verifying OTP:", token, "for:", user.email);
+
+    const verified = speakeasy.totp.verify({
+      secret: user.mfaSecret,
+      encoding: "base32",
+      token: token.trim(),
+      window: 10, 
+    });
+
+    console.log("[DEBUG] OTP Verified:", verified);
+
+    if (!verified) {
+      return res.status(400).json({ error: "Invalid OTP" });
+    }
+
+    user.mfaEnabled = true;
+    await user.save();
+
+    const jwtToken = signToken(user._id);
+    res.json({ token: jwtToken });
+  } catch (error) {
+    console.error("[MFA ERROR]", error);
+    res.status(500).json({ error: "Server error during MFA verification" });
+  }
+};
+
+exports.disableMfa = async (req, res) => {
+  const user = await User.findById(req.user.id);
+  user.mfaEnabled = false; user.mfaSecret = undefined;
+  await user.save();
+  res.json({ message: "MFA disabled" });
 };
 
 
@@ -97,32 +192,28 @@ exports.getUserByMe = async (req, res) => {
   }
 };
 
+
 exports.updateUser = async (req, res) => {
   try {
     const { username, email } = req.body;
+    const avatar = req.file?.filename;
 
-    const existingUsername = await User.findOne({ username });
-    if (existingUsername && existingUsername._id.toString() !== req.user.id) {
-      return res.status(400).json({ error: "Username is already taken." });
-    }
+    const updates = { username, email };
+    if (avatar) updates.avatar = avatar;
 
-    const existingEmail = await User.findOne({ email });
-    if (existingEmail && existingEmail._id.toString() !== req.user.id) {
-      return res.status(400).json({ error: "Email is already in use." });
-    }
-
-    const user = await User.findByIdAndUpdate(
-      req.user.id,
-      { username, email },
-      { new: true, runValidators: true }
-    );
+    const user = await User.findByIdAndUpdate(req.user.id, updates, {
+      new: true,
+      runValidators: true,
+    });
 
     if (!user) return res.status(404).json({ error: "User not found" });
+
     res.json({ success: "Profile updated successfully!", user });
-  } catch (error) {
-    res.status(500).json({ error: error.message });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
   }
 };
+
 
 
 
@@ -144,7 +235,7 @@ exports.createUser = async (req, res) => {
       return res.status(400).json({ error: "Email is already in use. Please use a different email." });
     }
 
-  
+
 
     // Create new user
     const user = new User({ username, email, password, role });
@@ -160,26 +251,33 @@ exports.createUser = async (req, res) => {
 exports.changePassword = async (req, res) => {
   try {
     const { oldPassword, newPassword } = req.body;
-
-    // Find user by ID
     const user = await User.findById(req.user.id);
     if (!user) return res.status(404).json({ error: "User not found" });
 
-    // Compare old password with stored password
     const isMatch = await bcrypt.compare(oldPassword, user.password);
     if (!isMatch) return res.status(400).json({ error: "Old password is incorrect" });
 
-    // Update with new password (hashed in pre-save hook)
+    for (const old of user.previousPasswords || []) {
+      const reused = await bcrypt.compare(newPassword, old);
+      if (reused) return res.status(400).json({ error: "You cannot reuse a previous password." });
+    }
+
+    user.previousPasswords = user.previousPasswords || [];
+    user.previousPasswords.unshift(user.password);
+    if (user.previousPasswords.length > 5) {
+      user.previousPasswords = user.previousPasswords.slice(0, 5);
+    }
+
     user.password = newPassword;
     user.passwordChangedAt = Date.now();
-    await user.save();
+    user.passwordExpiresAt = new Date(Date.now() + 90 * 24 * 60 * 60 * 1000);
 
+    await user.save();
     res.json({ success: "Password changed successfully!" });
   } catch (error) {
     res.status(500).json({ error: error.message });
   }
 };
-
 
 exports.forgotPassword = async (req, res) => {
   try {
@@ -228,28 +326,38 @@ exports.forgotPassword = async (req, res) => {
 exports.resetPassword = async (req, res) => {
   try {
     const { token, newPassword } = req.body;
-
     const hashedToken = crypto.createHash("sha256").update(token).digest("hex");
     const user = await User.findOne({
       resetPasswordToken: hashedToken,
-      resetPasswordExpire: { $gt: Date.now() }, // Ensure token is not expired
+      resetPasswordExpire: { $gt: Date.now() },
     });
 
     if (!user) return res.status(400).json({ error: "Invalid or expired token" });
 
-    // Update password and set passwordChangedAt
-    user.password = newPassword; // Will be hashed due to pre-save hook
+    for (const old of user.previousPasswords || []) {
+      const reused = await bcrypt.compare(newPassword, old);
+      if (reused) return res.status(400).json({ error: "Cannot reuse a previous password." });
+    }
+
+    user.previousPasswords = user.previousPasswords || [];
+    user.previousPasswords.unshift(user.password);
+    if (user.previousPasswords.length > 5) {
+      user.previousPasswords = user.previousPasswords.slice(0, 5);
+    }
+
+    user.password = newPassword;
     user.passwordChangedAt = Date.now();
+    user.passwordExpiresAt = new Date(Date.now() + 90 * 24 * 60 * 60 * 1000);
     user.resetPasswordToken = undefined;
     user.resetPasswordExpire = undefined;
 
     await user.save();
-
     res.json({ message: "Password reset successfully! Please log in again." });
   } catch (error) {
     res.status(500).json({ error: error.message });
   }
 };
+
 
 
 
