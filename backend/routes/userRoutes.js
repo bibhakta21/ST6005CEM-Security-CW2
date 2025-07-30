@@ -1,5 +1,7 @@
 const express = require("express");
 const router = express.Router();
+const csrf = require("csurf"); // ✅ added
+const csrfProtection = csrf({ cookie: true }); // ✅ cookie-based
 
 const {
   registerUser,
@@ -10,6 +12,7 @@ const {
   disableMfa,
   getUserByMe,
   updateUser,
+  changePassword,
   forgotPassword,
   resetPassword,
   getAllUsers,
@@ -17,23 +20,24 @@ const {
   createUser,
 } = require("../controller/userController");
 
-
 const { authMiddleware, adminMiddleware } = require("../middleware/authMiddleware");
 const { loginRateLimiter } = require("../middleware/rateLimitMiddleware");
 const { avatarUpload } = require("../middleware/uploadMiddleware");
 const ActivityLog = require("../model/ActivityLog");
 
-// Public Auth Routes
+// Public Routes
 router.post("/signup", registerUser);
 router.get("/verify-email/:token", verifyEmail);
-router.post("/login", loginRateLimiter, loginUser);
+router.post("/login", csrfProtection, loginRateLimiter, loginUser);
+
 router.post("/verify-mfa", verifyMfa);
+router.put("/change-password", authMiddleware, changePassword);
 router.post("/forgot-password", forgotPassword);
 router.post("/reset-password", resetPassword);
 
-// Authenticated User Routes
+// Authenticated Routes
 router.get("/me", authMiddleware, getUserByMe);
-router.put("/me", authMiddleware, avatarUpload, updateUser); 
+router.put("/me", authMiddleware, avatarUpload, updateUser);
 router.post("/setup-mfa", authMiddleware, setupMfa);
 router.post("/disable-mfa", authMiddleware, disableMfa);
 
