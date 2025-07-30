@@ -1,17 +1,18 @@
-import { useState, useContext, useEffect } from "react";
+import { useState, useContext, useEffect, useRef } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { toast } from "react-hot-toast";
 import { UserContext } from "../../context/UserContext";
 import { FiShield } from "react-icons/fi";
 
 export default function OtpVerify() {
-  const [otp, setOtp] = useState("");
+  const [otp, setOtp] = useState(["", "", "", "", "", ""]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const { setUser } = useContext(UserContext);
   const navigate = useNavigate();
   const location = useLocation();
   const userId = location.state?.userId;
+  const inputRefs = useRef([]);
 
   useEffect(() => {
     if (!userId) {
@@ -20,9 +21,40 @@ export default function OtpVerify() {
     }
   }, [userId, navigate]);
 
+  const handleChange = (index, value) => {
+    if (!/^\d*$/.test(value)) return; // Allow only digits
+
+    const newOtp = [...otp];
+    newOtp[index] = value.slice(-1); // Only 1 digit per input
+    setOtp(newOtp);
+
+    if (value && index < 5) {
+      inputRefs.current[index + 1]?.focus();
+    }
+  };
+
+  const handleKeyDown = (e, index) => {
+    if (e.key === "Backspace" && !otp[index] && index > 0) {
+      inputRefs.current[index - 1]?.focus();
+    }
+  };
+
+  const handlePaste = (e) => {
+    const pasted = e.clipboardData.getData("text").slice(0, 6).split("");
+    const newOtp = [...otp];
+    pasted.forEach((char, i) => {
+      if (i < 6 && /^\d$/.test(char)) {
+        newOtp[i] = char;
+      }
+    });
+    setOtp(newOtp);
+    inputRefs.current[pasted.length - 1]?.focus();
+  };
+
   const handleVerify = async () => {
-    if (!otp) {
-      setError("Please enter the OTP sent to your email.");
+    const fullOtp = otp.join("").trim();
+    if (fullOtp.length !== 6) {
+      setError("Please enter the 6-digit OTP sent to your email.");
       return;
     }
 
@@ -35,14 +67,11 @@ export default function OtpVerify() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           userId: String(userId).trim(),
-          token: String(otp).trim(),
+          token: fullOtp,
         }),
-        credentials: "include"
       });
 
       const data = await res.json();
-      console.log("[DEBUG] MFA Verify Response:", data);
-
       setLoading(false);
 
       if (!res.ok) {
@@ -50,9 +79,12 @@ export default function OtpVerify() {
         return;
       }
 
-      // Fetch user info (session cookie is set)
+      localStorage.setItem("token", data.token);
+
       const userRes = await fetch("http://localhost:3000/api/users/me", {
-        credentials: "include"
+        headers: {
+          Authorization: `Bearer ${data.token}`,
+        },
       });
 
       if (userRes.ok) {
@@ -78,23 +110,35 @@ export default function OtpVerify() {
         </div>
         <h2 className="text-2xl font-bold text-gray-800 mb-2">Verify OTP</h2>
         <p className="text-sm text-gray-600 mb-6">
-          We've sent a one-time code to your email. It will expire in <span className="font-semibold">5 minutes</span>.
+          We've sent a one-time code to your email. It will expire in{" "}
+          <span className="font-semibold">5 minutes</span>.
         </p>
 
         {error && <p className="text-red-500 text-sm mb-4">{error}</p>}
 
-        <input
-          type="text"
-          value={otp}
-          onChange={(e) => setOtp(e.target.value)}
-          placeholder="Enter OTP"
-          className="w-full px-4 py-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-black text-center tracking-widest font-mono"
-        />
+        <div
+          className="flex justify-center gap-3 mb-6"
+          onPaste={handlePaste}
+        >
+          {otp.map((digit, index) => (
+            <input
+              key={index}
+              type="text"
+              inputMode="numeric"
+              maxLength="1"
+              value={digit}
+              onChange={(e) => handleChange(index, e.target.value)}
+              onKeyDown={(e) => handleKeyDown(e, index)}
+              ref={(el) => (inputRefs.current[index] = el)}
+              className="w-12 h-12 border border-gray-300 text-center text-xl rounded-md focus:outline-none focus:ring-2 focus:ring-black"
+            />
+          ))}
+        </div>
 
         <button
           onClick={handleVerify}
           disabled={loading}
-          className="w-full mt-5 bg-black text-white py-3 rounded-md hover:bg-gray-900 transition-all duration-200"
+          className="w-full mt-2 bg-black text-white py-3 rounded-md hover:bg-gray-900 transition-all duration-200"
         >
           {loading ? "Verifying..." : "Verify OTP"}
         </button>
