@@ -14,12 +14,15 @@ export default function Register() {
   const [registered, setRegistered] = useState(false);
   const [agreed, setAgreed] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [passwordStrength, setPasswordStrength] = useState("Weak");
+
   const [formData, setFormData] = useState({
     username: "",
     email: "",
     password: "",
     confirmPassword: "",
   });
+
   const [errors, setErrors] = useState({});
   const [submitError, setSubmitError] = useState("");
 
@@ -33,13 +36,19 @@ export default function Register() {
 
   useEffect(() => {
     const password = formData.password;
-    setPasswordChecks({
+    const checks = {
       length: password.length >= 8,
       number: /\d/.test(password),
       uppercase: /[A-Z]/.test(password),
       lowercase: /[a-z]/.test(password),
       special: /[!@#$%^&*(),.?":{}|<>]/.test(password),
-    });
+    };
+    setPasswordChecks(checks);
+
+    const passed = Object.values(checks).filter(Boolean).length;
+    if (passed <= 2) setPasswordStrength("Weak");
+    else if (passed <= 4) setPasswordStrength("Medium");
+    else setPasswordStrength("Strong");
   }, [formData.password]);
 
   const validateField = (name, value) => {
@@ -110,8 +119,8 @@ export default function Register() {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-50 font-[Poppins] px-4">
-      <div className="w-full max-w-md bg-white p-8 rounded-xl shadow-md">
+    <div className="min-h-screen flex items-center justify-center bg-gray-50 font-[Poppins] px-4 py-20">
+      <div className="w-full max-w-2xl bg-white p-8 rounded-xl shadow-md">
         <div className="text-center mb-6">
           <h2 className="text-4xl font-bold text-gray-800">Register</h2>
           <p className="text-sm text-gray-500">Join the fashion revolution today</p>
@@ -125,31 +134,61 @@ export default function Register() {
         )}
 
         <form onSubmit={handleSubmit} className="space-y-5">
-          <InputField label="Full Name" name="username" icon={<FiUser />} type="text" value={formData.username} onChange={handleChange} error={errors.username} />
-          <InputField label="Email" name="email" icon={<FiMail />} type="email" value={formData.email} onChange={handleChange} error={errors.email} />
-          <PasswordField label="Password" name="password" value={formData.password} onChange={handleChange} show={showPassword} setShow={setShowPassword} error={errors.password} />
+          {/* Username + Email row */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <InputField label="Full Name" name="username" icon={<FiUser />} type="text" value={formData.username} onChange={handleChange} error={errors.username} />
+            <InputField label="Email" name="email" icon={<FiMail />} type="email" value={formData.email} onChange={handleChange} error={errors.email} />
+          </div>
 
-          {/* ✅ Live Password Validation */}
-          <div className="text-sm mt-1 space-y-1 px-1">
-            <p className={passwordChecks.length ? "text-green-600" : "text-red-600"}>
-              {passwordChecks.length ? "✔" : "✖"} Must be at least 8 characters
-            </p>
-            <p className={passwordChecks.number ? "text-green-600" : "text-red-600"}>
-              {passwordChecks.number ? "✔" : "✖"} Must contain at least 1 number
-            </p>
-            <p className={passwordChecks.uppercase ? "text-green-600" : "text-red-600"}>
-              {passwordChecks.uppercase ? "✔" : "✖"} Must contain at least 1 uppercase letter
-            </p>
-            <p className={passwordChecks.lowercase ? "text-green-600" : "text-red-600"}>
-              {passwordChecks.lowercase ? "✔" : "✖"} Must contain at least 1 lowercase letter
-            </p>
-            <p className={passwordChecks.special ? "text-green-600" : "text-red-600"}>
-              {passwordChecks.special ? "✔" : "✖"} Must contain at least 1 special character
+          {/* Password + Confirm Password row */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <PasswordField label="Password" name="password" value={formData.password} onChange={handleChange} show={showPassword} setShow={setShowPassword} error={errors.password} />
+            <PasswordField label="Confirm Password" name="confirmPassword" value={formData.confirmPassword} onChange={handleChange} show={showConfirmPassword} setShow={setShowConfirmPassword} error={errors.confirmPassword} />
+          </div>
+
+          {/* Password strength and checks */}
+          <div className="px-1">
+            <div className="h-2 rounded bg-gray-200 overflow-hidden mb-1">
+              <div
+                className={`h-full transition-all duration-300 ${
+                  passwordStrength === "Weak"
+                    ? "bg-red-500 w-1/3"
+                    : passwordStrength === "Medium"
+                    ? "bg-yellow-500 w-2/3"
+                    : "bg-green-500 w-full"
+                }`}
+              ></div>
+            </div>
+            <p className={`text-sm font-semibold ${
+              passwordStrength === "Strong"
+                ? "text-green-600"
+                : passwordStrength === "Medium"
+                ? "text-yellow-600"
+                : "text-red-600"
+            }`}>
+              Strength: {passwordStrength}
             </p>
           </div>
 
-          <PasswordField label="Confirm Password" name="confirmPassword" value={formData.confirmPassword} onChange={handleChange} show={showConfirmPassword} setShow={setShowConfirmPassword} error={errors.confirmPassword} />
+          <div className="text-sm mt-1 space-y-1 px-1">
+            <p className={passwordChecks.length ? "text-green-600" : "text-red-600"}>
+              {passwordChecks.length ? "✔" : "✖"} At least 8 characters
+            </p>
+            <p className={passwordChecks.number ? "text-green-600" : "text-red-600"}>
+              {passwordChecks.number ? "✔" : "✖"} At least 1 number
+            </p>
+            <p className={passwordChecks.uppercase ? "text-green-600" : "text-red-600"}>
+              {passwordChecks.uppercase ? "✔" : "✖"} At least 1 uppercase letter
+            </p>
+            <p className={passwordChecks.lowercase ? "text-green-600" : "text-red-600"}>
+              {passwordChecks.lowercase ? "✔" : "✖"} At least 1 lowercase letter
+            </p>
+            <p className={passwordChecks.special ? "text-green-600" : "text-red-600"}>
+              {passwordChecks.special ? "✔" : "✖"} At least 1 special character
+            </p>
+          </div>
 
+          {/* MFA Agreement */}
           <div className="flex items-center space-x-2">
             <input type="checkbox" id="mfa-agree" checked={agreed} onChange={(e) => setAgreed(e.target.checked)} className="accent-black" required />
             <label htmlFor="mfa-agree" className="text-sm text-gray-700">
