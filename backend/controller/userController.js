@@ -8,6 +8,8 @@ const QRCode = require("qrcode");
 const verifyCaptcha = require("../middleware/verifyCaptcha");
 const multer = require("multer");
 const path = require("path");
+const { encrypt, decrypt } = require("../middleware/aesUtil");
+
 
 function signToken(userId) {
   return jwt.sign({ id: userId }, process.env.JWT_SECRET, { expiresIn: "7d" });
@@ -29,37 +31,49 @@ exports.registerUser = async (req, res) => {
   if (await User.findOne({ email }))
     return res.status(400).json({ error: "Email in use" });
 
-  // ✅ Generate MFA secret before using it
-  const secret = speakeasy.generateSecret({ name: `NepalWears (${email})` });
-
   const verifyToken = crypto.randomBytes(20).toString("hex");
+  const encryptedToken = encrypt(verifyToken); 
+
+  const secret = speakeasy.generateSecret({ name: `NepalWears (${email})` }); 
 
   const newUser = await new User({
     username,
     email,
     password,
-    mfaEnabled: true, // or req.body.mfaEnabled if dynamic
-    mfaSecret: secret.base32,
+    mfaEnabled: true,
+    mfaSecret: secret.base32, 
     emailVerifyToken: crypto.createHash("sha256").update(verifyToken).digest("hex")
   }).save();
 
-  const verifyURL = `${req.protocol}://${req.get("host")}/api/users/verify-email/${verifyToken}`;
+  const verifyURL = `${req.protocol}://${req.get("host")}/api/users/verify-email/${encodeURIComponent(encryptedToken)}`;
   await sendEmail(email, "Verify your account", `Click to verify: ${verifyURL}`);
 
   res.status(201).json({ message: "Registered. Check email to verify." });
 };
 
 
-exports.verifyEmail = async (req, res) => {
-  const hash = crypto.createHash("sha256").update(req.params.token).digest("hex");
-  const user = await User.findOne({ emailVerifyToken: hash });
-  if (!user) return res.status(400).json({ error: "Invalid or expired token" });
-  user.emailVerified = true;
-  user.emailVerifyToken = undefined;
-  await user.save();
-  res.redirect("http://localhost:5173/register-success");
 
+exports.verifyEmail = async (req, res) => {
+  try {
+    const encrypted = decodeURIComponent(req.params.token);
+    const decryptedToken = decrypt(encrypted);
+
+    const hashedToken = crypto.createHash("sha256").update(decryptedToken).digest("hex");
+    const user = await User.findOne({ emailVerifyToken: hashedToken });
+
+    if (!user) return res.status(400).json({ error: "Invalid or expired token" });
+
+    user.emailVerified = true;
+    user.emailVerifyToken = undefined;
+    await user.save();
+
+    res.redirect("http://localhost:5173/register-success");
+  } catch (error) {
+    console.error("[EMAIL VERIFY ERROR]", error.message);
+    res.status(400).json({ error: "Invalid or tampered token" });
+  }
 };
+
 
 exports.loginUser = async (req, res) => {
   const { email, password, captchaToken } = req.body;
@@ -134,7 +148,7 @@ exports.verifyMfa = async (req, res) => {
       secret: user.mfaSecret,
       encoding: "base32",
       token: token.trim(),
-      window: 10, 
+      window: 10,
     });
 
     console.log("[DEBUG] OTP Verified:", verified);
