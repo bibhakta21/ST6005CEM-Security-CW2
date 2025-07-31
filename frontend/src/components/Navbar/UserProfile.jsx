@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import toast from "react-hot-toast";
-import fallbackAvatar from "../../assets/sandip.jpg"; // Fallback avatar
+import fallbackAvatar from "../../assets/sandip.jpg";
 
 const UserProfile = () => {
   const navigate = useNavigate();
@@ -78,16 +78,16 @@ const UserProfile = () => {
       setError("Please add png, jpg, gif, or jpeg images.");
     } else {
       setAvatarFile(file);
-      setError(""); // Clear any previous error
+      setError("");
     }
   };
 
   if (!user) return <div className="text-center py-10 font-[Poppins]">Loading profile...</div>;
 
   return (
-    <div className="min-h-screen bg-gray-50 px-4 py-10 font-[Poppins]">
-      <div className="max-w-2xl mx-auto bg-white shadow-md rounded-xl p-8">
-        <h2 className="text-3xl font-semibold text-center text-gray-800 mb-6">My Profile</h2>
+    <div className="min-h-screen bg-gray-100 px-4 py-12 font-[Poppins]">
+      <div className="max-w-3xl mx-auto bg-white shadow-lg rounded-xl p-10">
+        <h2 className="text-3xl font-semibold text-center text-gray-800 mb-8">My Profile</h2>
 
         {/* Avatar */}
         <div className="flex flex-col items-center mb-6">
@@ -98,7 +98,7 @@ const UserProfile = () => {
                 : fallbackAvatar
             }
             alt="avatar"
-            className="w-28 h-28 rounded-full object-cover border-2 border-gray-200 shadow-sm"
+            className="w-28 h-28 rounded-full object-cover border-2 border-gray-200 shadow-md"
           />
           {editMode && (
             <input
@@ -111,73 +111,82 @@ const UserProfile = () => {
         </div>
 
         {/* Profile Details */}
-        <div className="space-y-5">
+        <div className="space-y-6">
           {/* Username */}
           <div>
-            <label className="block text-sm font-medium text-gray-700">Username</label>
+            <label className="block text-sm font-medium text-gray-700 mb-1">Username</label>
             {editMode ? (
               <input
                 type="text"
                 value={formData.username}
                 onChange={(e) => setFormData({ ...formData, username: e.target.value })}
-                className="w-full px-4 py-2 border rounded-md mt-1 focus:outline-none focus:ring-2 focus:ring-black"
+                className="w-full px-4 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-black"
               />
             ) : (
-              <p className="mt-1 text-gray-800">{user.username}</p>
+              <p className="text-gray-900">{user.username}</p>
             )}
           </div>
 
           {/* Email */}
           <div>
-            <label className="block text-sm font-medium text-gray-700">Email</label>
+            <label className="block text-sm font-medium text-gray-700 mb-1">Email</label>
             {editMode ? (
               <input
                 type="email"
                 value={formData.email}
                 onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                className="w-full px-4 py-2 border rounded-md mt-1 focus:outline-none focus:ring-2 focus:ring-black"
+                className="w-full px-4 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-black"
               />
             ) : (
-              <p className="mt-1 text-gray-800">{user.email}</p>
+              <p className="text-gray-900">{user.email}</p>
             )}
           </div>
 
           {/* MFA */}
           <div>
-            <label className="block text-sm font-medium text-gray-700">Multi-Factor Authentication</label>
-            <p className="mt-1 text-gray-800">{user.mfaEnabled ? "Enabled ✅" : "Disabled ❌"}</p>
+            <label className="block text-sm font-medium text-gray-700 mb-1">Multi-Factor Authentication</label>
+            <p className="text-gray-900">{user.mfaEnabled ? "Enabled ✅" : "Disabled ❌"}</p>
           </div>
 
-          {/* Error message */}
-          {error && <p className="text-red-500 text-sm text-center">{error}</p>}
+          {/* Error */}
+          {error && <p className="text-red-500 text-sm">{error}</p>}
         </div>
 
         {/* Action Buttons */}
-        <div className="mt-8 flex flex-wrap gap-3 justify-center sm:justify-between">
+        <div className="mt-10 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
           {!editMode ? (
             <button
               onClick={() => setEditMode(true)}
-              className="bg-blue-600 hover:bg-blue-700 text-white px-5 py-2 rounded-md transition"
+              className="bg-black text-white py-3 rounded-md hover:bg-gray-800 transition"
             >
               Edit Profile
             </button>
           ) : (
             <button
               onClick={handleUpdate}
-              className="bg-green-600 hover:bg-green-700 text-white px-5 py-2 rounded-md transition"
+              className="bg-green-600 text-white py-3 rounded-md hover:bg-green-700 transition"
             >
               Save Changes
             </button>
           )}
+
           <button
             onClick={() => navigate("/changepass")}
-            className="bg-yellow-500 hover:bg-yellow-600 text-white px-5 py-2 rounded-md transition"
+            className="bg-black text-white py-3 rounded-md hover:bg-gray-800 transition"
           >
             Change Password
           </button>
+
+          <button
+            onClick={() => navigate("/orders")}
+            className="bg-black text-white py-3 rounded-md hover:bg-gray-800 transition"
+          >
+            Order History
+          </button>
+
           <button
             onClick={handleLogout}
-            className="bg-red-600 hover:bg-red-700 text-white px-5 py-2 rounded-md transition"
+            className="bg-red-600 text-white py-3 rounded-md hover:bg-red-700 transition col-span-full sm:col-span-2 lg:col-span-1"
           >
             Logout
           </button>
