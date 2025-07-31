@@ -44,18 +44,21 @@ export default function ChangePass() {
         navigate("/login");
       }, 2000);
     } catch (error) {
-      setError(error.response?.data?.error || "Failed to change password");
+      const msg = error.response?.data?.error || "Failed to change password";
+
+      // 🧠 Custom error for reused password
+      if (msg.toLowerCase().includes("reuse")) {
+        setError("Old password detected! Please choose a new password you haven’t used recently.");
+      } else {
+        setError(msg);
+      }
     }
   };
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gray-100 px-4 font-[Poppins]">
       <div className="bg-white w-full max-w-md p-8 rounded-xl shadow-md">
-      
-
-    
-
-           <div className="text-center mb-6">
+        <div className="text-center mb-6">
           <h2 className="text-4xl font-bold text-gray-800">Change Password</h2>
           <p className="text-sm text-gray-500">Update your password below</p>
         </div>
