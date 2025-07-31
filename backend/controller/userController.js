@@ -77,49 +77,63 @@ exports.verifyEmail = async (req, res) => {
 
 exports.loginUser = async (req, res) => {
   const { email, password, captchaToken } = req.body;
+
+  //  Verify CAPTCHA
   if (!await verifyCaptcha(captchaToken))
     return res.status(400).json({ error: "CAPTCHA failed" });
 
+  //  Check if user exists
   const user = await User.findOne({ email });
   if (!user) return res.status(401).json({ error: "Invalid credentials" });
+
+  //  Check for account lock
   if (user.isLocked) return res.status(403).json({ error: "Account locked" });
 
+  //  Validate password
   const matched = await bcrypt.compare(password, user.password);
   if (!matched) {
     await user.incLoginAttempts();
     return res.status(401).json({ error: "Invalid credentials" });
   }
 
-  user.loginAttempts = 0; user.lockUntil = undefined;
+  // Reset login attempts after successful login
+  user.loginAttempts = 0;
+  user.lockUntil = undefined;
   await user.save();
 
+  // Ensure email is verified
   if (!user.emailVerified) return res.status(403).json({ error: "Email not verified" });
 
+  // Check for password expiration
   if (user.passwordExpiresAt && user.passwordExpiresAt < Date.now()) {
     return res.status(403).json({ error: "Your password has expired. Please reset it." });
   }
 
+  // MFA Step
   if (user.mfaEnabled) {
     const otp = speakeasy.totp({
       secret: user.mfaSecret,
       encoding: "base32",
     });
 
-    // Send OTP via email
     await sendEmail(
       user.email,
       "Your OTP Code for Login",
       `Your one-time password (OTP) is: ${otp}. It will expire in 5 minutes.`
     );
 
-
     return res.json({ mfaRequired: true, userId: user._id });
   }
 
-
+  //  Issue JWT token
   const token = signToken(user._id);
+
+  //Create session 
+  req.session.userId = user._id;
+
   res.json({ token });
 };
+
 
 exports.setupMfa = async (req, res) => {
   const user = await User.findById(req.user.id);
