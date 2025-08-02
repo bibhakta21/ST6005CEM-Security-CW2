@@ -23,7 +23,7 @@ export default function Login() {
   useEffect(() => {
     const fetchCsrf = async () => {
       try {
-        const res = await fetch("http://localhost:3000/api/csrf-token", {
+        const res = await fetch("https://localhost:3000/api/csrf-token", {
           credentials: "include",
         });
         const data = await res.json();
@@ -52,11 +52,11 @@ export default function Login() {
     }
 
     try {
-      const response = await fetch("http://localhost:3000/api/users/login", {
+      const response = await fetch("https://localhost:3000/api/users/login", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          "X-CSRF-Token": csrfToken, // ✅ CSRF token header
+          "X-CSRF-Token": csrfToken, //  CSRF token header
         },
         credentials: "include",
         body: JSON.stringify({ email, password, captchaToken }),
@@ -70,17 +70,17 @@ export default function Login() {
         return;
       }
 
-      // ✅ Handle MFA Redirect
+      // Handle MFA Redirect
       if (data.mfaRequired) {
         navigate("/otpverify", { state: { userId: data.userId } });
         return;
       }
 
-      // ✅ Store token in localStorage (optional)
+      // Store token in localStorage (optional)
       localStorage.setItem("token", data.token);
 
-      // ✅ Fetch user info
-      const userRes = await fetch("http://localhost:3000/api/users/me", {
+      //Fetch user info
+      const userRes = await fetch("https://localhost:3000/api/users/me", {
         headers: { Authorization: `Bearer ${data.token}` },
       });
 
