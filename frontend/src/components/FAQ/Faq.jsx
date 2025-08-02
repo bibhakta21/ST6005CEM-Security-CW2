@@ -1,5 +1,4 @@
-import React from "react";
-import { Link as ScrollLink, Element } from "react-scroll";
+import { Element, Link as ScrollLink } from "react-scroll";
 
 const faqs = [
   {
@@ -28,9 +27,9 @@ const faqs = [
     answer: `Errors may occur due to invalid payment details, expired cards, or poor internet connectivity. Try again or contact support...`,
   },
   {
-    question: "What is return policy in samaya?",
-    id: "samaya-return-policy",
-    answer: `Samaya follows the same return policy—items must be returned within 14 days in original condition and packaging...`,
+    question: "What is return policy in nepalwears?",
+    id: "nepalwears-return-policy",
+    answer: `nepalwears follows the same return policy—items must be returned within 14 days in original condition and packaging...`,
   },
 ];
 
