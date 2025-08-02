@@ -32,16 +32,16 @@ exports.registerUser = async (req, res) => {
     return res.status(400).json({ error: "Email in use" });
 
   const verifyToken = crypto.randomBytes(20).toString("hex");
-  const encryptedToken = encrypt(verifyToken); 
+  const encryptedToken = encrypt(verifyToken);
 
-  const secret = speakeasy.generateSecret({ name: `NepalWears (${email})` }); 
+  const secret = speakeasy.generateSecret({ name: `NepalWears (${email})` });
 
   const newUser = await new User({
     username,
     email,
     password,
     mfaEnabled: true,
-    mfaSecret: secret.base32, 
+    mfaSecret: secret.base32,
     emailVerifyToken: crypto.createHash("sha256").update(verifyToken).digest("hex")
   }).save();
 
@@ -67,7 +67,7 @@ exports.verifyEmail = async (req, res) => {
     user.emailVerifyToken = undefined;
     await user.save();
 
-    res.redirect("http://localhost:5173/register-success");
+    res.redirect("https://localhost:5173/register-success");
   } catch (error) {
     console.error("[EMAIL VERIFY ERROR]", error.message);
     res.status(400).json({ error: "Invalid or tampered token" });
@@ -292,8 +292,8 @@ exports.changePassword = async (req, res) => {
 
     user.previousPasswords = user.previousPasswords || [];
     user.previousPasswords.unshift(user.password);
-    if (user.previousPasswords.length > 5) {
-      user.previousPasswords = user.previousPasswords.slice(0, 5);
+    if (user.previousPasswords.length > 2) {
+      user.previousPasswords = user.previousPasswords.slice(0, 2);
     }
 
     user.password = newPassword;
@@ -324,7 +324,7 @@ exports.forgotPassword = async (req, res) => {
 
     await user.save();
 
-    const resetUrl = `http://localhost:5173/reset-password/${resetToken}`;
+    const resetUrl = `https://localhost:5173/reset-password/${resetToken}`;
 
     // Send email using nodemailer
     const transporter = nodemailer.createTransport({
