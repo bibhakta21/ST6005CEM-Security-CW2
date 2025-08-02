@@ -48,7 +48,7 @@ app.use(session({
   }),
   cookie: {
     httpOnly: true,
-    secure: false, // Set to true in production (HTTPS)
+    secure: true,
     sameSite: "Strict",
     maxAge: 30 * 24 * 60 * 60 * 1000,
   },
@@ -77,7 +77,7 @@ app.use(helmet.hsts({ maxAge: 31536000, includeSubDomains: true, preload: true }
 //CORS Config
 
 app.use(cors({
-  origin: "http://localhost:5173",
+  origin: "https://localhost:5173",
   credentials: true,
   methods: ["GET", "POST", "PUT", "DELETE"],
 }));
@@ -87,7 +87,7 @@ app.use(cors({
 
 const authLimiter = rateLimit({
   windowMs: 15 * 60 * 1000,
-  max: 10,
+  max: 15,
   message: "Too many attempts from this IP, please try again after 15 minutes.",
 });
 app.use("/api/users/login", authLimiter);
@@ -95,7 +95,6 @@ app.use("/api/users/register", authLimiter);
 
 
 // Middlewares
-
 app.use(express.json());
 app.use(cookieParser());
 app.use(mongoSanitize());
@@ -146,9 +145,8 @@ app.get("/api/csrf-token", csrfProtection, (req, res) => {
 
 
 //  Routes
-
 app.use("/api/users", userRoutes);
-app.use(logActivity); // Log actions after auth routes
+app.use(logActivity);
 app.use("/api/products", ProductRoutes);
 app.use("/api/bookings", bookingRoutes);
 app.use("/api/contact", contactRoutes);
@@ -164,7 +162,6 @@ app.get("/", (req, res) => {
 
 
 //  Global Error Handler
-
 app.use((err, req, res, next) => {
   if (err.code === "LIMIT_FILE_SIZE") {
     return res.status(400).json({ error: "File size should not exceed 2MB" });
