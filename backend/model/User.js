@@ -34,7 +34,7 @@ UserSchema.virtual("isLocked").get(function () {
 
 UserSchema.methods.incLoginAttempts = function () {
   const updates = { $inc: { loginAttempts: 1 } };
-  if (this.loginAttempts + 1 >= 5 && !this.isLocked) {
+  if (this.loginAttempts + 1 >= 15 && !this.isLocked) {
     updates.$set = { lockUntil: Date.now() + 15 * 60 * 1000 };
   }
   return this.updateOne(updates);
