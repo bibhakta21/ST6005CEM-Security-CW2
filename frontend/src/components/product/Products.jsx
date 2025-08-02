@@ -5,7 +5,7 @@ import { toast } from "react-hot-toast";
 import { useNavigate, useLocation } from "react-router-dom";
 import { UserContext } from "../../context/UserContext";
 
-const backendURL = "http://localhost:3000";
+const backendURL = "https://localhost:3000";
 
 const ProductCard = ({ product, isBookmarked, onToggleBookmark, onAddToCart }) => {
   const navigate = useNavigate();

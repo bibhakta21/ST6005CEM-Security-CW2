@@ -16,7 +16,7 @@ const UserProfile = () => {
   useEffect(() => {
     const fetchUser = async () => {
       try {
-        const res = await fetch("http://localhost:3000/api/users/me", {
+        const res = await fetch("https://localhost:3000/api/users/me", {
           headers: { Authorization: `Bearer ${token}` },
         });
         const data = await res.json();
@@ -44,7 +44,7 @@ const UserProfile = () => {
       body.append("email", formData.email);
       if (avatarFile) body.append("avatar", avatarFile);
 
-      const res = await fetch("http://localhost:3000/api/users/me", {
+      const res = await fetch("https://localhost:3000/api/users/me", {
         method: "PUT",
         headers: { Authorization: `Bearer ${token}` },
         body,
@@ -94,7 +94,7 @@ const UserProfile = () => {
           <img
             src={
               user.avatar
-                ? `http://localhost:3000/uploads/${user.avatar}`
+                ? `https://localhost:3000/uploads/${user.avatar}`
                 : fallbackAvatar
             }
             alt="avatar"

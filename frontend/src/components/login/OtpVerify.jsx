@@ -62,7 +62,7 @@ export default function OtpVerify() {
     setError("");
 
     try {
-      const res = await fetch("http://localhost:3000/api/users/verify-mfa", {
+      const res = await fetch("https://localhost:3000/api/users/verify-mfa", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -81,7 +81,7 @@ export default function OtpVerify() {
 
       localStorage.setItem("token", data.token);
 
-      const userRes = await fetch("http://localhost:3000/api/users/me", {
+      const userRes = await fetch("https://localhost:3000/api/users/me", {
         headers: {
           Authorization: `Bearer ${data.token}`,
         },

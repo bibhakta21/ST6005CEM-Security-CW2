@@ -4,7 +4,7 @@ import { toast, Toaster } from "react-hot-toast";
 import { Link, useNavigate, useParams } from "react-router-dom";
 import { UserContext } from "../../context/UserContext";
 
-const backendURL = "http://localhost:3000";
+const backendURL = "https://localhost:3000";
 
 const ProductDetail = () => {
   const { id } = useParams();

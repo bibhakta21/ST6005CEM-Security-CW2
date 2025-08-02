@@ -5,7 +5,7 @@ import { useNavigate } from "react-router-dom";
 import { FaCartPlus, FaHeart } from "react-icons/fa";
 import { UserContext } from "../../context/UserContext";
 
-const backendURL = "http://localhost:3000";
+const backendURL = "https://localhost:3000";
 
 // Product Card Component
 const ProductCard = ({ product, onToggleBookmark, onAddToCart }) => {

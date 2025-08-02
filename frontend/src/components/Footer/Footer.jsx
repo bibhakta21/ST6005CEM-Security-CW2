@@ -14,9 +14,11 @@ const Footer = () => {
         {/* Brand & Testimonial */}
         <div>
           <Link to="/">
-            <div className="text-4xl font-extrabold text-gray-900">
-              NepalWears<span className="text-orange-500">.</span>
-            </div>
+           <div className="text-4xl font-extrabold text-gray-900">
+            <span className="text-gray-900">Nepal</span>
+            <span className="text-orange-500">Wears</span>
+          
+          </div>
           </Link>
           <p className="mt-4 text-sm leading-relaxed text-gray-500">
             Don’t waste time, just order! This is the best website to purchase

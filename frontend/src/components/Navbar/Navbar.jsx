@@ -1,5 +1,4 @@
 import { useContext, useEffect, useState } from "react";
-import toast from "react-hot-toast";
 import {
   FiHeart,
   FiMenu,
@@ -56,7 +55,9 @@ const Navbar = () => {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 flex items-center justify-between">
         <Link to="/">
           <div className="text-4xl font-extrabold text-gray-900">
-            NepalWears<span className="text-orange-500">.</span>
+            <span className="text-gray-900">Nepal</span>
+            <span className="text-orange-500">Wears</span>
+          
           </div>
         </Link>
 
@@ -93,15 +94,15 @@ const Navbar = () => {
             Clothing
           </li>
 
-          <Link to="/about">
+          <Link to="/contact">
             <li className={`cursor-pointer ${activeNav === "about" ? "text-blue-600" : "hover:text-blue-600"}`}>
-              About
+               Contact Us
             </li>
           </Link>
 
-          <Link to="/contact">
+          <Link to="/about">
             <li className={`cursor-pointer ${activeNav === "contact" ? "text-blue-600" : "hover:text-blue-600"}`}>
-              Contact
+              About Us
             </li>
           </Link>
         </ul>
@@ -157,8 +158,11 @@ const Navbar = () => {
               <button onClick={() => navigate("/login")} className="text-sm font-medium hover:text-blue-600">
                 Login
               </button>
-              <button onClick={() => navigate("/register")} className="ml-2 text-sm font-medium hover:text-blue-600">
-                Sign Up
+              <button
+                onClick={() => navigate("/register")}
+                className="ml-2 text-sm font-medium bg-orange-500 text-white px-4 py-1.5 rounded-full hover:bg-orange-600 transition"
+              >
+                Register
               </button>
             </>
           )}
@@ -195,8 +199,11 @@ const Navbar = () => {
                 <button onClick={() => navigate("/login")} className="text-sm font-medium hover:text-blue-600">
                   Login
                 </button>
-                <button onClick={() => navigate("/register")} className="ml-2 text-sm font-medium hover:text-blue-600">
-                  Sign Up
+                <button
+                  onClick={() => navigate("/register")}
+                  className="ml-2 text-sm font-medium bg-orange-500 text-white px-4 py-1.5 rounded-full hover:bg-orange-600 transition"
+                >
+                  Register
                 </button>
               </>
             )}
