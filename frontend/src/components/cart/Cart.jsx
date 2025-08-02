@@ -8,7 +8,7 @@ import product1 from "../../assets/product1.png";
 import { UserContext } from "../../context/UserContext";
 import { generateEsewaSignature } from "../../utils/esewaSignature";
 
-const backendURL = "http://localhost:3000";
+const backendURL = "https://localhost:3000";
 
 const Cart = () => {
   const { user, setCartCount } = useContext(UserContext);
@@ -333,8 +333,8 @@ const Cart = () => {
                 <input type="hidden" name="product_code" value="EPAYTEST" />
                 <input type="hidden" name="product_service_charge" value="0" />
                 <input type="hidden" name="product_delivery_charge" value={deliveryCharge} />
-                <input type="hidden" name="success_url" value="http://localhost:5173/paymentsuccess" />
-                <input type="hidden" name="failure_url" value="http://localhost:5173/paymentfailure" />
+                <input type="hidden" name="success_url" value="https://localhost:5173/paymentsuccess" />
+                <input type="hidden" name="failure_url" value="https://localhost:5173/paymentfailure" />
                 <input type="hidden" name="signed_field_names" value={signedFieldNames} />
                 <input type="hidden" name="signature" value={signature} />
 

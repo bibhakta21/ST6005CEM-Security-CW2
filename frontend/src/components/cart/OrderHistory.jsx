@@ -3,7 +3,7 @@ import axios from "axios";
 import { toast } from "react-hot-toast";
 import { useNavigate } from "react-router-dom";
 
-const backendURL = "http://localhost:3000";
+const backendURL = "https://localhost:3000";
 
 export default function OrderHistory() {
   const [orders, setOrders] = useState([]);
