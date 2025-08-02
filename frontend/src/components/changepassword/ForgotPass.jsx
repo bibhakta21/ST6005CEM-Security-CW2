@@ -15,7 +15,7 @@ export default function ForgotPass() {
     setLoading(true);
 
     try {
-      await axios.post("http://localhost:3000/api/users/forgot-password", { email });
+      await axios.post("https://localhost:3000/api/users/forgot-password", { email });
       toast.success("Reset link sent! Check your email.");
       setEmail("");
     } catch (error) {

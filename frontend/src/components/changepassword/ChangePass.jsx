@@ -29,7 +29,7 @@ export default function ChangePass() {
       const token = localStorage.getItem("token");
 
       await axios.put(
-        "http://localhost:3000/api/users/change-password",
+        "https://localhost:3000/api/users/change-password",
         formData,
         {
           headers: { Authorization: `Bearer ${token}` },
